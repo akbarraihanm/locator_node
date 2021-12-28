@@ -8,7 +8,8 @@ var mimeTypeNotAccepted = ""
 var fileName = ""
 
 var multer = require('multer')
-var baseUrl = process.env.BASE_URL 
+var baseUrl = process.env.BASE_URL
+var fileUrl = process.env.FILE_URL
 var storage = multer.diskStorage({
     destination: function(req, file, cb) {
         var dir = fileUrl+'/public/files/idcard'
