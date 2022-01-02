@@ -45,24 +45,26 @@ exports.createActivity = async function(req, res) {
     try {
         const checkStore = await store.findOne({ where: { id: storeId }})
         if (checkStore === null) statusRes.notFound("Store not found", res)
-        var map = {
-            activity: activity,
-            userId: userId,
-            storeId: storeId
+        else {
+            var map = {
+                activity: activity,
+                userId: userId,
+                storeId: storeId
+            }
+            const create = await db.activity.create(map)
+            const activityData = await db.activity.findOne({
+                where: { id: create.id },
+                attributes: { exclude: ['userId', 'storeId'] },
+                include: [
+                    {
+                        model: User,
+                        attributes: { exclude: ['password'] }
+                    },
+                    { model: db.store }
+                ]
+            })
+            statusRes.postOk(activityData, "Activity has been created", res)            
         }
-        const create = await db.activity.create(map)
-        const activityData = await db.activity.findOne({
-            where: { id: create.id },
-            attributes: { exclude: ['userId', 'storeId'] },
-            include: [
-                {
-                    model: User,
-                    attributes: { exclude: ['password'] }
-                },
-                { model: db.store }
-            ]
-        })
-        statusRes.postOk(activityData, "Activity has been created", res)
     } catch (error) {
         statusRes.internalServerError(error.message, res)
     }
@@ -75,14 +77,16 @@ exports.update = async function(req, res) {
     try {
         const checkActivity = await Activity.findOne({ where: { id: id }})
         if (checkActivity === null) statusRes.notFound("Activity not found", res)
-        var map = {
-            activity: activity ?? checkActivity.activity,
-            userId: checkActivity.userId,
-            storeId: checkActivity.storeId
+        else {
+            var map = {
+                activity: activity ?? checkActivity.activity,
+                userId: checkActivity.userId,
+                storeId: checkActivity.storeId
+            }
+            await Activity.update(map, { where: { id: id }})
+            const response = await Activity.findOne({ where: { id: id }})
+            statusRes.postOk(response, "Activity has been updated", res)            
         }
-        await Activity.update(map, { where: { id: id }})
-        const response = await Activity.findOne({ where: { id: id }})
-        statusRes.postOk(response, "Activity has been updated", res)
     } catch (error) {
         statusRes.internalServerError(error.message, res)
     }

@@ -57,26 +57,28 @@ exports.create = [
                 mimeTypeNotAccepted = ""
             } else {
                 if (fileName === "") statusRes.badRequest("File must be filled", res)
-                imgPath = baseUrl+`/files/absence/${fileName}`
-                var map = {
-                    latLng: latLng,
-                    userId: userId,
-                    storeId: storeId,
-                    img: imgPath
+                else {
+                    imgPath = baseUrl+`/files/absence/${fileName}`
+                    var map = {
+                        latLng: latLng,
+                        userId: userId,
+                        storeId: storeId,
+                        img: imgPath
+                    }
+                    var create = await db.absence.create(map)
+                    var absence = await db.absence.findOne({
+                        where: { id: create.id },
+                        attributes: { exclude: ['userId', 'storeId'] },
+                        include: [
+                            {
+                                model: db.user,
+                                attributes: { exclude: ['password'] }
+                            },
+                            { model: db.store }
+                        ]
+                    })
+                    statusRes.postOk(absence, "Absence created successfully", res)                    
                 }
-                var create = await db.absence.create(map)
-                var absence = await db.absence.findOne({
-                    where: { id: create.id },
-                    attributes: { exclude: ['userId', 'storeId'] },
-                    include: [
-                        {
-                            model: db.user,
-                            attributes: { exclude: ['password'] }
-                        },
-                        { model: db.store }
-                    ]
-                })
-                statusRes.postOk(absence, "Absence created successfully", res)
             }            
         } catch (error) {
             statusRes.internalServerError(error.message, res)
@@ -119,8 +121,10 @@ exports.delete = async function(req, res) {
     try {
         const absence = await db.absence.findOne({ where: { id: id }})
         if (absence === null) statusRes.notFound("Absence not found", res)
-        await db.absence.destroy({ where: { id: id }})
-        statusRes.postOk(absence, "Absence has been deleted", res)
+        else {
+            await db.absence.destroy({ where: { id: id }})
+            statusRes.postOk(absence, "Absence has been deleted", res)            
+        }
     } catch (error) {
         statusRes.internalServerError(error.message, res)
     }
